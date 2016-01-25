@@ -1,0 +1,33 @@
+let
+
+    PQCallTouch = (trackerId as text, token as text, dateStart as date, dateFinish as date) =>
+
+let
+
+    numberOfDays = Duration.Days(dateFinish-dateStart),
+    Query2 = List.Dates(dateStart, numberOfDays, #duration(1, 0, 0, 0)),
+    Custom1 = List.Transform(Query2, each Date.ToText(_, "dd\/MM\/yyyy")),
+    Custom3 = List.Transform(Custom1, each PQCallTouchDates(trackerId, token, _)),
+
+    #"Converted to Table" = Table.FromList(Custom3, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+    #"Expanded Column1" = Table.ExpandTableColumn(#"Converted to Table", "Column1", {"callerNumber", "utmContent", "waitingConnect", "utmTerm", "userAgent", "keyword", "utmCampaign", "additionalTags", "date", "callId", "url", "clientId", "medium", "ip", "city", "ref", "duration", "order", "phoneNumber", "source", "sessionId", "utmMedium", "callClientUniqueId", "utmSource"}, {"callerNumber", "utmContent", "waitingConnect", "utmTerm", "userAgent", "keyword", "utmCampaign", "additionalTags", "date", "callId", "url", "clientId", "medium", "ip", "city", "ref", "duration", "order", "phoneNumber", "source", "sessionId", "utmMedium", "callClientUniqueId", "utmSource"}),
+
+    PQCallTouchDates = (trackerId as text, token as text, date as text) => 
+
+// trackerId = credentials{0}[calltouchTrackerId], 
+// token = credentials{0}[calltouchToken], 
+// date = "20/01/2015",
+
+let
+    TextString = "http://api.calltouch.ru/calls-service/RestAPI/" & trackerId & "/calls-diary/calls?clientApiId=" & token & "&dateFrom=" & date & "&dateTo=" & date,
+    Source = Json.Document(Web.Contents(TextString)),
+    #"Converted to Table" = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+    #"Expanded Column1" = Table.ExpandRecordColumn(#"Converted to Table", "Column1", {"callerNumber", "utmContent", "waitingConnect", "utmTerm", "userAgent", "keyword", "utmCampaign", "additionalTags", "date", "callId", "url", "clientId", "medium", "ip", "city", "ref", "duration", "order", "phoneNumber", "source", "sessionId", "utmMedium", "callClientUniqueId", "utmSource"}, {"callerNumber", "utmContent", "waitingConnect", "utmTerm", "userAgent", "keyword", "utmCampaign", "additionalTags", "date", "callId", "url", "clientId", "medium", "ip", "city", "ref", "duration", "order", "phoneNumber", "source", "sessionId", "utmMedium", "callClientUniqueId", "utmSource"}),
+    #"Expanded additionalTags" = Table.ExpandListColumn(#"Expanded Column1", "additionalTags")
+in
+    #"Expanded additionalTags"
+
+in
+   #"Expanded Column1"
+in
+    PQCallTouch
